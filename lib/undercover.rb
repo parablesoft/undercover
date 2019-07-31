@@ -38,8 +38,8 @@ module Undercover
     def build
       each_result_arg do |filename, coverage, imagen_node|
         key = filename.gsub(/^\.\//, '')
-        results[key] ||= []
-        results[key] << Result.new(
+        results["api/" + key] ||= []
+        results["api/" + key] << Result.new(
           imagen_node, coverage, filename
         )
       end
