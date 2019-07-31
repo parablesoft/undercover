@@ -89,7 +89,7 @@ module Undercover
     def each_result_arg
       match_all = ->(_) { true }
       lcov.source_files.each do |relative_filename, coverage|
-        path = File.join(code_dir, "api", relative_filename)
+        path = File.join(code_dir, relative_filename)
         root_ast = Imagen::Node::Root.new.build_from_file(path)
         next if root_ast.children.empty?
 
