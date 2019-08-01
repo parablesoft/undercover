@@ -14,9 +14,9 @@ module Undercover
     attr_reader :files
     def_delegators :files, :each, :'<=>'
 
-    def initialize(dir, compare_base = nil, path = ".")
+    def initialize(dir, compare_base = nil)
       @dir = dir
-      @path = path
+      @relative_git_dir = File.expand_path("#{dir}/..")
       @repo = Rugged::Repository.new(dir)
       @repo.workdir = Pathname.new(dir).dirname.to_s # TODO: can replace?
       @compare_base = compare_base
@@ -51,7 +51,7 @@ module Undercover
 
     def each_changed_line
       files.each do |filepath, line_numbers|
-        expanded_path = File.expand_path(filepath, @path)
+        expanded_path = File.expand_path(filepath, @relative_git_dir)
         line_numbers.each { |ln| yield expanded_path, ln }
       end
     end

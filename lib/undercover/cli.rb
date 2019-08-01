@@ -44,7 +44,7 @@ module Undercover
 
     def self.changeset(opts)
       git_dir = File.expand_path(opts.git_dir)
-      Undercover::Changeset.new(git_dir, opts.compare, opts.path)
+      Undercover::Changeset.new(git_dir, opts.compare)
     end
   end
 end
