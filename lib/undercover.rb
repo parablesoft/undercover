@@ -38,8 +38,8 @@ module Undercover
     def build
       each_result_arg do |filename, coverage, imagen_node|
         key = filename.gsub(/^\.\//, '')
-        results["api/" + key] ||= []
-        results["api/" + key] << Result.new(
+        results[key] ||= []
+        results[key] << Result.new(
           imagen_node, coverage, filename
         )
       end
@@ -88,13 +88,19 @@ module Undercover
     # so is this still good idea? (Rakefile, .gemspec etc)
     def each_result_arg
       match_all = ->(_) { true }
-      lcov.source_files.each do |relative_filename, coverage|
-        path = File.join(code_dir, relative_filename)
+      changeset.file_paths.each do |relative_filename, coverage|
+        next unless relative_filename.to_s.end_with?(".rb")
+        path = case relative_filename
+               when Pathname then relative_filename
+               else
+                 File.expand_path(relative_filename, code_dir)
+               end
+
         root_ast = Imagen::Node::Root.new.build_from_file(path)
         next if root_ast.children.empty?
 
         root_ast.children[0].find_all(match_all).each do |node|
-          yield(relative_filename, coverage, node)
+          yield(path.to_s, coverage, node)
         end
       end
     end

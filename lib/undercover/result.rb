@@ -12,10 +12,16 @@ module Undercover
 
     def initialize(node, file_cov, file_path)
       @node = node
-      @coverage = file_cov.select do |ln, _|
-        ln > first_line && ln < last_line
+      if file_cov
+        @coverage = file_cov.select do |ln, _|
+          ln > first_line && ln < last_line
+        end
       end
       @file_path = file_path
+    end
+
+    def has_coverage?
+      !coverage.nil?
     end
 
     # TODO: make DRY
@@ -30,11 +36,13 @@ module Undercover
     end
 
     def uncovered?(line_no)
+      return true unless has_coverage?
       line_cov = coverage.find { |ln, _cov| ln == line_no }
       line_cov && line_cov[1].zero?
     end
 
     def coverage_f
+      return 0.0 unless has_coverage?
       covered = coverage.reduce(0) do |sum, (_, cov)|
         sum + [[0, cov].max, 1].min
       end
@@ -48,7 +56,7 @@ module Undercover
     # Zips coverage data (that doesn't include any non-code lines) with
     # full source for given code fragment (this includes non-code lines!)
     def pretty_print_lines
-      cov_enum = coverage.each
+      cov_enum = coverage ? coverage.each : [].each
       cov_source_lines = (node.first_line..node.last_line).map do |line_no|
         cov_line_no = begin
                         cov_enum.peek[0]
