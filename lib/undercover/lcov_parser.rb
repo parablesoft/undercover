@@ -6,14 +6,15 @@ module Undercover
   class LcovParser
     attr_reader :io, :source_files
 
-    def initialize(lcov_io)
+    def initialize(lcov_io, path)
       @io = lcov_io
+      @path = path
       @source_files = {}
     end
 
-    def self.parse(lcov_report_path)
+    def self.parse(lcov_report_path, path = ".")
       lcov_io = File.open(lcov_report_path)
-      new(lcov_io).parse
+      new(lcov_io, path).parse
     end
 
     def parse
@@ -29,6 +30,7 @@ module Undercover
       case line
       when /^SF:(.+)/
         @current_filename = $~[1].gsub(/^\.\//, '')
+        @current_filename = File.expand_path("#{@path}/#{@current_filename}")
         source_files[@current_filename] = []
       when /^DA:(\d+),(\d+)/
         line_no = $~[1]

@@ -29,7 +29,9 @@ module Undercover
     # @param changeset [Undercover::Changeset]
     # @param opts [Undercover::Options]
     def initialize(changeset, opts)
-      @lcov = LcovParser.parse(File.open(opts.lcov))
+      @opts = opts
+      @relative_git_dir = File.expand_path("#{opts.git_dir}/..")
+      @lcov = LcovParser.parse(File.open(opts.lcov), opts.path)
       @code_dir = opts.path
       @changeset = changeset.update
       @results = {}
@@ -88,16 +90,18 @@ module Undercover
     # so is this still good idea? (Rakefile, .gemspec etc)
     def each_result_arg
       match_all = ->(_) { true }
-      changeset.file_paths.each do |relative_filename, coverage|
+      changeset.file_paths.each do |relative_filename|
         next unless relative_filename.to_s.end_with?(".rb")
         path = case relative_filename
                when Pathname then relative_filename
                else
-                 File.expand_path(relative_filename, code_dir)
+                 File.expand_path(relative_filename, @relative_git_dir)
                end
 
         root_ast = Imagen::Node::Root.new.build_from_file(path)
         next if root_ast.children.empty?
+
+        coverage = lcov.source_files[path.to_s]
 
         root_ast.children[0].find_all(match_all).each do |node|
           yield(path.to_s, coverage, node)
